@@ -5,60 +5,65 @@ import com.highcapable.kavaref.KavaRef.Companion.resolve
 import com.highcapable.yukihookapi.hook.entity.YukiBaseHooker
 import com.highcapable.yukihookapi.hook.factory.toClass
 import com.op.aod.enhance.BuildConfig
+import java.util.concurrent.atomic.AtomicLong
 
 internal object SingleClickBlockHook {
 
+    /** 上次被拦截的 onClick 时间戳（ms）。Atomic 保证多线程安全。 */
+    private val lastBlockedTime = AtomicLong(0)
+
+    /** 双击间隔阈值（ms）。 */
+    private const val DOUBLE_CLICK_THRESHOLD = 350L
+
     fun YukiBaseHooker.hookSingleClickWakeUpBlock() {
         if (!AodConfigReader.read(MainHook.hostAppContext).blockSingleClick) {
-            if (BuildConfig.DEBUG) Log.d("AOD_Enhance", "AOD_SINGLE_CLICK_BLOCK: disabled by config, skipping hook registration")
-            return  // 用户关闭：不注册任何 hook，零 YukiHookAPI 拦截开销
+            if (BuildConfig.DEBUG) Log.d("AOD_Enhance", "AOD_SINGLE_CLICK_BLOCK: disabled by config")
+            return
         }
 
-        hookSingleClickBlock(
-            targetClass = "com.oplus.systemui.aod.scene.AodViewSingleClickWakeUpHolder\$AodSingleClickWakeUpCallback",
-            label = "NormalAodSingleClick"
+        val targets = arrayOf(
+            "com.oplus.systemui.aod.scene.AodViewSingleClickWakeUpHolder\$AodSingleClickWakeUpCallback" to "NormalAod",
+            "com.oplus.systemui.aod.scene.PanoramicAodSingleClickWakeUpController\$PanoramicAodSingleClickWakeUpCallback" to "PanoramicAod",
+            "com.oplus.systemui.aod.display.OplusWakeUpController\$AodSingleClickWakeUpCallback" to "WakeUpController",
         )
-        hookSingleClickBlock(
-            targetClass = "com.oplus.systemui.aod.scene.PanoramicAodSingleClickWakeUpController\$PanoramicAodSingleClickWakeUpCallback",
-            label = "PanoramicAodSingleClick"
-        )
-        hookSingleClickBlock(
-            targetClass = "com.oplus.systemui.aod.scene.AodSceneViewHolder\$AodSceneGestureCallback",
-            label = "SceneAodSingleClick"
-        )
-        hookSingleClickBlock(
-            targetClass = "com.oplus.systemui.aod.display.OplusWakeUpController\$AodSingleClickWakeUpCallback",
-            label = "WakeUpControllerSingleClick"
-        )
+
+        for ((cls, label) in targets) {
+            registerClickHook(cls, label)
+        }
     }
 
-    /** 通用单击唤醒屏蔽 Hook。通过 [targetClass] 定位不同 AOD 场景的回调。 */
-    private fun YukiBaseHooker.hookSingleClickBlock(targetClass: String, label: String) {
+    private fun YukiBaseHooker.registerClickHook(targetClass: String, label: String) {
         runCatching {
             targetClass
                 .toClass(appClassLoader)
                 .resolve()
-                .firstMethod {
-                    name = "isSupportGesture"
-                    parameters(Int::class)
-                }.hook {
+                .firstMethod { name = "onClick" }
+                .hook {
                     before {
-                        // 热路径：仅 int 对比，无 IPC 无 volatile 无反射
-                        val gesture = args(0).any() as? Int ?: return@before
-                        if (gesture == GESTURE_SINGLE_CLICK) {
-                            result = false
+                        val now = System.currentTimeMillis()
+                        val prev = lastBlockedTime.get()
+
+                        if (prev != 0L && now - prev < DOUBLE_CLICK_THRESHOLD) {
+                            // 放行：快速第二次点击
+                            lastBlockedTime.set(0L)
                             if (BuildConfig.DEBUG) {
-                                Log.d("AOD_Enhance", "AOD_SINGLE_CLICK_BLOCK: $label blocked (gesture=$gesture)")
+                                Log.d("AOD_Enhance", "AOD_SINGLE_CLICK_BLOCK: $label allowed (double-click)")
                             }
+                            return@before
+                        }
+
+                        // 拦截：首次单击或慢速重试
+                        lastBlockedTime.set(now)
+                        result = null
+                        if (BuildConfig.DEBUG) {
+                            Log.d("AOD_Enhance", "AOD_SINGLE_CLICK_BLOCK: $label blocked")
                         }
                     }
                 }
         }.onFailure {
             if (BuildConfig.DEBUG) {
-                Log.d("AOD_Enhance", "AOD_SINGLE_CLICK_BLOCK: $label not available, ${it.message}")
+                Log.d("AOD_Enhance", "AOD_SINGLE_CLICK_BLOCK: $label onClick not available, ${it.message}")
             }
         }
     }
-
-    private const val GESTURE_SINGLE_CLICK = 16
 }
