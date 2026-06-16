@@ -28,6 +28,7 @@ internal object AodConfigReader {
     private var cached: AodConfig? = null
 
     /** 上次成功读取的时间戳（ns），用于 TTL 判断。 */
+    @Volatile
     private var lastReadTimeNs = 0L
 
     /** 缓存有效期：1 秒内复用缓存，避免高频 IPC（如触摸事件触发 4 次 Hook 调用）。 */
