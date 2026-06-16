@@ -1,6 +1,6 @@
 # ColorOS AOD Enhance
 
-![License](https://img.shields.io/github/license/Qjj7679/ColorOS_Aod_Enhance?style=flat-square)
+![License](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)
 
 ColorOS 息屏显示（AOD）增强模块（Xposed）。提供可视化配置界面，修改自动保存。
 
