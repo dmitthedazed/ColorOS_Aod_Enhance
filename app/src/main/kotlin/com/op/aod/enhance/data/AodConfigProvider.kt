@@ -19,6 +19,16 @@ class AodConfigProvider : ContentProvider() {
         private val matcher = UriMatcher(UriMatcher.NO_MATCH).apply {
             addURI(AUTHORITY, PATH_CONFIG, 1)
         }
+
+        // 列名数组（预定义，避免每次重新创建数组）
+        private val COLUMNS = arrayOf(
+            AodConfigContract.KEY_INIT_DARK,
+            AodConfigContract.KEY_INIT_BRIGHT,
+            AodConfigContract.KEY_RUNNING_MULTIPLIER,
+            AodConfigContract.KEY_ENABLE_PANORAMIC,
+            AodConfigContract.KEY_ENABLE_SETTINGS_SUPPORT,
+            AodConfigContract.KEY_BLOCK_SINGLE_CLICK,
+        )
     }
 
     override fun onCreate(): Boolean = true
@@ -34,14 +44,7 @@ class AodConfigProvider : ContentProvider() {
     ): Cursor? {
         if (matcher.match(uri) != 1) return null
         val p = prefs() ?: return null
-        return MatrixCursor(arrayOf(
-            AodConfigContract.KEY_INIT_DARK,
-            AodConfigContract.KEY_INIT_BRIGHT,
-            AodConfigContract.KEY_RUNNING_MULTIPLIER,
-            AodConfigContract.KEY_ENABLE_PANORAMIC,
-            AodConfigContract.KEY_ENABLE_SETTINGS_SUPPORT,
-            AodConfigContract.KEY_BLOCK_SINGLE_CLICK,
-        )).apply {
+        return MatrixCursor(COLUMNS).apply {
             addRow(arrayOf<Any>(
                 p.getInt(AodConfigContract.KEY_INIT_DARK, AodConfigContract.DEFAULT_INIT_DARK),
                 p.getInt(AodConfigContract.KEY_INIT_BRIGHT, AodConfigContract.DEFAULT_INIT_BRIGHT),
@@ -71,7 +74,7 @@ class AodConfigProvider : ContentProvider() {
             if (it.containsKey(AodConfigContract.KEY_BLOCK_SINGLE_CLICK))
                 e.putBoolean(AodConfigContract.KEY_BLOCK_SINGLE_CLICK, it.getAsBoolean(AodConfigContract.KEY_BLOCK_SINGLE_CLICK) ?: AodConfigContract.DEFAULT_BLOCK_SINGLE_CLICK)
         }
-        e.apply()
+        e.commit()
         return 1
     }
 

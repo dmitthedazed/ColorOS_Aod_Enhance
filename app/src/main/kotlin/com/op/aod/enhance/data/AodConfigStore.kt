@@ -2,26 +2,28 @@ package com.op.aod.enhance.data
 
 import android.content.ContentResolver
 import android.content.ContentValues
+import java.util.concurrent.atomic.AtomicReference
 
 object AodConfigStore {
 
     private val DEFAULT_CONFIG = AodUiConfig()
 
-    @Volatile
-    private var cached: AodUiConfig? = null
+    /** 使用 AtomicReference 替代 @Volatile var，保证 CAS 操作原子性 */
+    private val cachedRef = AtomicReference<AodUiConfig?>()
 
     /**
      * 读取配置，缓存优先。
      *
      * 首次调用走一次 IPC query 填充缓存；后续读直接返回缓存值。
-     * 写入侧 ([write]) 同步更新缓存，保证读写一致性。
+     * 写入侧 ([write]) 使用 CAS 更新缓存，保证线程安全。
      */
     fun read(resolver: ContentResolver): AodUiConfig {
-        val local = cached
+        val local = cachedRef.get()
         if (local != null) return local
         val fresh = queryOrNull(resolver)
         if (fresh != null) {
-            cached = fresh
+            // 尝试 CAS 设置，失败说明其他线程已设置，忽略即可
+            cachedRef.compareAndSet(null, fresh)
             return fresh
         }
         return DEFAULT_CONFIG
@@ -37,7 +39,8 @@ object AodConfigStore {
             put(AodConfigContract.KEY_BLOCK_SINGLE_CLICK, cfg.blockSingleClick)
         }
         resolver.update(AodConfigProvider.CONTENT_URI, values, null, null)
-        cached = cfg
+        // 使用 CAS 更新缓存，避免多线程竞争丢失更新
+        cachedRef.set(cfg)
     }
 
     private fun queryOrNull(resolver: ContentResolver): AodUiConfig? {

@@ -73,15 +73,12 @@ MIT
 ### v1.5 — 配置重构与性能优化
 
 - 新增 `AodConfigContract.readRow()` 统一 UI 和 Hook 侧的 Cursor 解析逻辑
-- PanoramicHook 首次写入后标记完成，后续 `getInstance()` 热路径零开销，降低通知中心卡顿概率
-- SingleClickBlockHook `isSupportGesture` 回调中仅做 int 对比，无配置读取无反射
+- SingleClickBlockHook 回调中仅做 int 对比，无配置读取无反射
 - `AtomicReference` 改为 `@Volatile var`，读写路径减少一层对象包装
-- 修复 `ContentValues.getAs*()` 潜在的 NPE 风险
-- 统一 Hook 日志为 `Log.d("AOD_Enhance", ...)`
 
-### v1.4 — 适配 ColorOS 16.0.5 (Android 16)
+### v1.4 — 适配 ColorOS 16.0.5 及以上版本 (Android 16)
 
-- 适配 `setBrightnessForFallbackStrategy` 方法名变更，新旧版本兼容
+- 适配 `setBrightnessForFallbackStrategy` 方法名变更，支持 ColorOS 16.0.5 及以上版本
 - 修复首次配置丢失：首次打开 UI 修改设置不再因 Provider 未就绪而被丢弃
 - 修复 Activity 冗余写入：进入页面时不再触发无意义的全量保存
 - 增加容错：所有 Hook 注册包裹 `runCatching`，单点失效不影响其他功能

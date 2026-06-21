@@ -30,10 +30,20 @@ internal object BrightnessHook {
     }
 
     fun YukiBaseHooker.hookRunningBrightnessBoost() {
-        runCatching { hookBaseDisplayBrightnessBoost() }
-        runCatching { hookDozeBrightnessMethod("setDozeScreenBrightness") }
-        runCatching { hookDozeBrightnessMethod("setBrightnessForFallbackStrategy") }
-        runCatching { hookDozeBrightnessMethod("setBrightness4FallbackStrategy") }
+        // 使用统一的 runCatching 包裹，内部按功能分组处理
+        runCatching {
+            // BaseDisplay 方法（独立处理）
+            hookBaseDisplayBrightnessBoost()
+            // Doze 亮度方法统一 hook，用一个循环处理多个方法名
+            val dozeMethodNames = listOf(
+                "setDozeScreenBrightness",
+                "setBrightnessForFallbackStrategy",
+                "setBrightness4FallbackStrategy"
+            )
+            for (methodName in dozeMethodNames) {
+                runCatching { hookDozeBrightnessMethod(methodName) }
+            }
+        }
     }
 
     private fun YukiBaseHooker.hookBaseDisplayBrightnessBoost() {

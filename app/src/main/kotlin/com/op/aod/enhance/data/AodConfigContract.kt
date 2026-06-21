@@ -31,20 +31,44 @@ object AodConfigContract {
     const val DEFAULT_ENABLE_SETTINGS_SUPPORT = true
     const val DEFAULT_BLOCK_SINGLE_CLICK = true
 
+    /** 列索引缓存（延迟初始化，只在首次 readRow 时查询一次） */
+    private var columnIndices: IntArray? = null
+
+    /**
+     * 获取缓存的列索引，如果尚未初始化则先查询并缓存。
+     * 避免每次 readRow 都调用 getColumnIndexOrThrow。
+     */
+    private fun getCachedColumnIndices(c: Cursor): IntArray {
+        columnIndices?.let { return it }
+        val indices = intArrayOf(
+            c.getColumnIndexOrThrow(KEY_INIT_DARK),
+            c.getColumnIndexOrThrow(KEY_INIT_BRIGHT),
+            c.getColumnIndexOrThrow(KEY_RUNNING_MULTIPLIER),
+            c.getColumnIndexOrThrow(KEY_ENABLE_PANORAMIC),
+            c.getColumnIndexOrThrow(KEY_ENABLE_SETTINGS_SUPPORT),
+            c.getColumnIndexOrThrow(KEY_BLOCK_SINGLE_CLICK),
+        )
+        columnIndices = indices
+        return indices
+    }
+
     /**
      * 从 [Cursor] 当前行读取所有配置列的原始值。
      *
      * 由 UI 侧 ([AodConfigStore]) 和 Hook 侧 ([com.op.aod.enhance.hook.AodConfigReader]) 共用，
      * 新增/修改字段时只需改动此处和对应的数据类。
      */
-    fun readRow(c: Cursor): ConfigValues = ConfigValues(
-        initDark = c.getInt(c.getColumnIndexOrThrow(KEY_INIT_DARK)),
-        initBright = c.getInt(c.getColumnIndexOrThrow(KEY_INIT_BRIGHT)),
-        runningMultiplier = c.getFloat(c.getColumnIndexOrThrow(KEY_RUNNING_MULTIPLIER)),
-        enablePanoramic = c.getInt(c.getColumnIndexOrThrow(KEY_ENABLE_PANORAMIC)) == 1,
-        enableSettingsSupport = c.getInt(c.getColumnIndexOrThrow(KEY_ENABLE_SETTINGS_SUPPORT)) == 1,
-        blockSingleClick = c.getInt(c.getColumnIndexOrThrow(KEY_BLOCK_SINGLE_CLICK)) == 1,
-    )
+    fun readRow(c: Cursor): ConfigValues {
+        val indices = getCachedColumnIndices(c)
+        return ConfigValues(
+            initDark = c.getInt(indices[0]),
+            initBright = c.getInt(indices[1]),
+            runningMultiplier = c.getFloat(indices[2]),
+            enablePanoramic = c.getInt(indices[3]) == 1,
+            enableSettingsSupport = c.getInt(indices[4]) == 1,
+            blockSingleClick = c.getInt(indices[5]) == 1,
+        )
+    }
 
     /**
      * Cursor 原始值快照，避免两处重复实现相同的列解析。
