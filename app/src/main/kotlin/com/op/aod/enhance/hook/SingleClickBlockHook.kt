@@ -9,10 +9,10 @@ import java.util.concurrent.atomic.AtomicLong
 
 internal object SingleClickBlockHook {
 
-    /** 上次被拦截的 onClick 时间戳（ms）。Atomic 保证多线程安全。 */
+    /** Timestamp (ms) of the last blocked onClick. Atomic for thread safety. */
     private val lastBlockedTime = AtomicLong(0)
 
-    /** 双击间隔阈值（ms）。 */
+    /** Double-click interval threshold (ms). */
     private const val DOUBLE_CLICK_THRESHOLD = 350L
 
     fun YukiBaseHooker.hookSingleClickWakeUpBlock() {
@@ -44,7 +44,7 @@ internal object SingleClickBlockHook {
                         val prev = lastBlockedTime.get()
 
                         if (prev != 0L && now - prev < DOUBLE_CLICK_THRESHOLD) {
-                            // 放行：快速第二次点击
+                            // Allow: fast second tap
                             lastBlockedTime.set(0L)
                             if (BuildConfig.DEBUG) {
                                 Log.d("AOD_Enhance", "AOD_SINGLE_CLICK_BLOCK: $label allowed (double-click)")
@@ -52,7 +52,7 @@ internal object SingleClickBlockHook {
                             return@before
                         }
 
-                        // 拦截：首次单击或慢速重试
+                        // Block: first single tap or slow retry
                         lastBlockedTime.set(now)
                         result = null
                         if (BuildConfig.DEBUG) {

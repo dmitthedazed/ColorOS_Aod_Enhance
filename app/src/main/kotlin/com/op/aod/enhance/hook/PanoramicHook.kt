@@ -9,10 +9,10 @@ import java.util.concurrent.ConcurrentHashMap
 
 internal object PanoramicHook {
 
-    /** 反射方法缓存：Class -> Method */
+    /** Reflection method cache: Class -> Method */
     private val methodCache = ConcurrentHashMap<Class<*>, java.lang.reflect.Method?>()
 
-    /** 反射字段缓存：Class -> List<Field> */
+    /** Reflection field cache: Class -> List<Field> */
     private val fieldCache = ConcurrentHashMap<Class<*>, List<java.lang.reflect.Field>>()
 
     private val FIELD_NAMES = listOf("isSupportPanoramicAllDay", "isSupportPanoramicAllDayByPanelFeature", "isSupportPanoramicByPanelFeature")
@@ -39,7 +39,7 @@ internal object PanoramicHook {
 
                 val realClass = instance::class.java
 
-                // 方法1：调用 setPanoramicSupportedByRemote（带方法缓存）
+                // Approach 1: call setPanoramicSupportedByRemote (with method cache)
                 runCatching {
                     val method = methodCache.getOrPut(realClass) {
                         runCatching { realClass.getMethod("setPanoramicSupportedByRemote") }.getOrNull()
@@ -47,7 +47,7 @@ internal object PanoramicHook {
                     method?.invoke(instance)
                 }
 
-                // 方法2：反射设字段（带字段缓存，双重保障）
+                // Approach 2: set fields via reflection (with field cache, as a fallback safeguard)
                 val fields = fieldCache.getOrPut(realClass) {
                     FIELD_NAMES.mapNotNull { name ->
                         runCatching { realClass.getDeclaredField(name) }.getOrNull()

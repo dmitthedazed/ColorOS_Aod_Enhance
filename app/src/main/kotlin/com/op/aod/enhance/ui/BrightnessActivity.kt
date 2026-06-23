@@ -67,7 +67,7 @@ private fun BrightnessScreen(
             .debounce(300)
             .distinctUntilChanged()
             .collect { (dark, bright, multi) ->
-                // 从缓存读取完整配置再覆写——保证其他页面的设置不被默认值覆盖
+                // Read the full config from cache before overwriting, so settings from other pages aren't reset to defaults
                 val base = AodConfigStore.read(resolver)
                 currentOnSave(
                     base.copy(
@@ -82,7 +82,7 @@ private fun BrightnessScreen(
     Scaffold(
         topBar = {
             SmallTopAppBar(
-                title = "AOD亮度设置"
+                title = "AOD Brightness Settings"
             )
         }
     ) { paddingValues: PaddingValues ->
@@ -93,7 +93,7 @@ private fun BrightnessScreen(
                 .padding(20.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            Text("熄屏前暗光环境AOD亮度：${initDark.toInt()}")
+            Text("AOD brightness in dark environment before screen off: ${initDark.toInt()}")
             Slider(
                 value = initDark,
                 onValueChange = { initDark = it.toInt().toFloat() },
@@ -102,7 +102,7 @@ private fun BrightnessScreen(
                 modifier = Modifier.fillMaxWidth()
             )
 
-            Text("熄屏前亮光环境AOD亮度：${initBright.toInt()}")
+            Text("AOD brightness in bright environment before screen off: ${initBright.toInt()}")
             Slider(
                 value = initBright,
                 onValueChange = { initBright = it.toInt().toFloat() },
@@ -111,7 +111,7 @@ private fun BrightnessScreen(
                 modifier = Modifier.fillMaxWidth()
             )
 
-            Text("熄屏时AOD自动亮度倍率：$runningMultiplier")
+            Text("AOD auto-brightness multiplier while screen off: $runningMultiplier")
             Slider(
                 value = runningMultiplier,
                 onValueChange = { runningMultiplier = ((it * 10).toInt().coerceIn(10, 20) / 10f) },
@@ -123,21 +123,21 @@ private fun BrightnessScreen(
             TextField(
                 value = initDark.toInt().toString(),
                 onValueChange = { it.toIntOrNull()?.let { v -> initDark = v.coerceIn(0, 255).toFloat() } },
-                label = "输入熄屏前暗光环境AOD亮度",
+                label = "Enter AOD brightness for dark environment before screen off",
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true
             )
             TextField(
                 value = initBright.toInt().toString(),
                 onValueChange = { it.toIntOrNull()?.let { v -> initBright = v.coerceIn(0, 255).toFloat() } },
-                label = "输入熄屏前亮光环境AOD亮度",
+                label = "Enter AOD brightness for bright environment before screen off",
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true
             )
             TextField(
                 value = runningMultiplier.toString(),
                 onValueChange = { it.toFloatOrNull()?.let { v -> runningMultiplier = v.coerceIn(1.0f, 2.0f) } },
-                label = "输入熄屏时AOD自动亮度倍率",
+                label = "Enter AOD auto-brightness multiplier while screen off",
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true
             )

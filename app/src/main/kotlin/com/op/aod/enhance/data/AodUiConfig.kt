@@ -1,9 +1,9 @@
 package com.op.aod.enhance.data
 
 /**
- * UI 侧配置数据类。
- * 镜像关系：hook/AodConfig.kt 持有相同字段的 Hook 侧镜像。
- * 新增/修改字段时需同步更新：AodConfig（hook 侧）、AodConfigContract。
+ * Config data class for the UI side.
+ * Mirror relationship: hook/AodConfig.kt holds the Hook-side mirror with the same fields.
+ * When adding/changing a field, also update: AodConfig (hook side) and AodConfigContract.
  */
 data class AodUiConfig(
     val initDark: Int = AodConfigContract.DEFAULT_INIT_DARK,

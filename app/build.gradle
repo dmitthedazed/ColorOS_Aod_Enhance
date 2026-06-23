@@ -8,12 +8,12 @@ plugins {
 
 
 /**
- * ARM64 环境 aapt2 兼容方案。
+ * aapt2 compatibility workaround for ARM64 environments.
  *
- * AGP 内置的 aapt2 只有 x86_64 版，在 aarch64 Linux 上无法直接运行。
- * 本脚本检测到该情况后，自动用 qemu-user 包装 aapt2 二进制。
+ * AGP only bundles the x86_64 build of aapt2, which can't run directly on aarch64 Linux.
+ * When this script detects that case, it automatically wraps the aapt2 binary with qemu-user.
  *
- * 要求：系统需安装 qemu-user-static（apt install qemu-user-static）
+ * Requirement: qemu-user-static must be installed (apt install qemu-user-static).
  */
 def setupAapt2Wrapper() {
     def osArch = System.getProperty("os.arch")?.toLowerCase() ?: ""
@@ -22,9 +22,9 @@ def setupAapt2Wrapper() {
     def qemu = file("/usr/bin/qemu-x86_64-static")
     if (!qemu.exists()) {
         throw new GradleException(
-            "当前系统为 ARM64 架构，但缺少 qemu-x86_64-static。\n" +
-            "请运行：apt install qemu-user-static\n" +
-            "或使用 x86_64 环境构建。"
+            "This system is ARM64, but qemu-x86_64-static is missing.\n" +
+            "Run: apt install qemu-user-static\n" +
+            "or build in an x86_64 environment."
         )
     }
 
@@ -35,7 +35,7 @@ def setupAapt2Wrapper() {
     transformDir.eachFileRecurse { f ->
         if (f.name == "aapt2" && f.isFile() && f.canExecute()) {
             def backup = file("${f.absolutePath}.bin")
-            if (backup.exists()) return  // 已包装过
+            if (backup.exists()) return  // already wrapped
             f.renameTo(backup)
             f.text = """#!/bin/bash
 DIR="\$(dirname "\$0")"
@@ -50,7 +50,7 @@ exec ${qemu.absolutePath} "\$DIR/aapt2.bin" "\$@"
     }
 }
 
-// 资源处理前自动包装 aapt2（此时 Gradle 已完成 transforms 解压）
+// Wrap aapt2 before resource processing (Gradle has already unpacked the transforms by now)
 tasks.matching { it.name ==~ /process(Release|Debug)Resources/ }.configureEach {
     doFirst { setupAapt2Wrapper() }
 }

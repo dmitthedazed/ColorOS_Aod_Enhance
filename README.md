@@ -2,46 +2,46 @@
 
 ![License](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)
 
-ColorOS 息屏显示（AOD）增强模块（Xposed）。提供可视化配置界面，修改自动保存。
+An Xposed module that enhances Always-On Display (AOD) on ColorOS. Provides a visual configuration UI; changes are saved automatically.
 
-## 功能
+## Features
 
-**亮度调节**
-- 熄屏前暗光环境初始 AOD 亮度
-- 熄屏前亮光环境初始 AOD 亮度
-- 熄屏时 AOD 自动亮度倍率（1.0～2.0）
+**Brightness adjustment**
+- Initial AOD brightness in a dark environment before screen off
+- Initial AOD brightness in a bright environment before screen off
+- AOD auto-brightness multiplier while the screen is off (1.0–2.0)
 
-**功能开关**
-- 全天全景 AOD 支持
-- 息屏全景 AOD 显示设置
-- AOD 单击唤醒屏蔽
+**Feature toggles**
+- All-day panoramic AOD support
+- AOD panoramic display setting
+- Block AOD single-tap wake
 
-> 亮度部分已预设合理值，安装即用。如感觉过亮/过暗可在 App 中调节。
+> The brightness values come with sensible presets, so it works out of the box. If it feels too bright/dim, adjust it in the app.
 >
-> 熄屏时 AOD 自动亮度倍率默认值为 **1.6**，原因：熄屏后系统会将当前环境自动亮度乘以 **0.6** 作为 AOD 亮度，导致 AOD 偏暗。倍率设为 1.6 可抵消这一削减（1.6 × 0.6 ≈ 1.0），使 AOD 亮度与当前环境亮度匹配。
+> The default AOD auto-brightness multiplier while the screen is off is **1.6**. Reason: after the screen turns off, the system multiplies the current ambient auto-brightness by **0.6** to compute the AOD brightness, which makes AOD too dim. A multiplier of 1.6 cancels out this reduction (1.6 × 0.6 ≈ 1.0), keeping AOD brightness in line with the current ambient brightness.
 
-## 使用
+## Usage
 
-1. 安装 APK，在 Xposed/LSPosed 中激活模块
-2. 勾选目标作用域：`系统界面（com.android.systemui）`、`息屏（com.oplus.aod）`
-3. 重启系统界面后生效
-4. 打开模块 App 配置各项参数，修改后自动保存
+1. Install the APK and enable the module in Xposed/LSPosed.
+2. Select the target scopes: `System UI (com.android.systemui)` and `AOD (com.oplus.aod)`.
+3. Restart System UI for it to take effect.
+4. Open the module's app to configure each option; changes are saved automatically.
 
-> ⚠️ UI 保存后配置即时写入，Hook 侧读取方式按功能不同：
-> - **亮度相关**：每次触发直读 Provider，修改后即时生效（≤1s）
-> - **功能开关**：进程启动时预读，修改后需**重启系统界面/息屏进程或设备**才能生效
+> ⚠️ Once the UI saves, the config is written immediately. How the Hook side reads it depends on the feature:
+> - **Brightness-related**: read directly from the Provider on every trigger, so changes take effect immediately (≤1s).
+> - **Feature toggles**: read once at process startup, so changes require **restarting the System UI / AOD process or the device** to take effect.
 
-## 构建
+## Build
 
 ```bash
-# Release 版（R8 混淆 + 签名）
+# Release build (R8 obfuscation + signing)
 ./gradlew assembleRelease
 
-# Debug 版
+# Debug build
 ./gradlew assembleDebug
 ```
 
-APK 默认按架构分离，输出路径：
+By default the APKs are split per architecture. Output path:
 
 ```
 app/build/outputs/apk/
@@ -53,34 +53,34 @@ app/build/outputs/apk/
     └── app-armeabi-v7a-debug.apk
 ```
 
-> Release 构建需要配置签名文件（`keystore.properties`），Debug 构建可直接使用。详见 `app/build.gradle`。
+> Release builds require a signing configuration (`keystore.properties`); debug builds work out of the box. See `app/build.gradle` for details.
 
-## 技术栈
+## Tech stack
 
-| 组件 | 用途 |
+| Component | Purpose |
 |---|---|
-| YukiHookAPI + KavaRef | Xposed Hook 框架 |
-| Jetpack Compose + Miuix | UI 界面（MIUI 风格组件） |
-| ContentProvider + SharedPreferences | 配置跨进程存储 |
-| AGP 9.2.1 / Kotlin 2.4.0 / Gradle 9.5.1 | 构建系统 |
+| YukiHookAPI + KavaRef | Xposed hook framework |
+| Jetpack Compose + Miuix | UI (MIUI-style components) |
+| ContentProvider + SharedPreferences | Cross-process config storage |
+| AGP 9.2.1 / Kotlin 2.4.0 / Gradle 9.5.1 | Build system |
 
 ## License
 
 MIT
 
-## 更新日志
+## Changelog
 
-### v1.5 — 配置重构与性能优化
+### v1.5 — Config refactor and performance optimization
 
-- 新增 `AodConfigContract.readRow()` 统一 UI 和 Hook 侧的 Cursor 解析逻辑
-- SingleClickBlockHook 回调中仅做 int 对比，无配置读取无反射
-- `AtomicReference` 改为 `@Volatile var`，读写路径减少一层对象包装
+- Added `AodConfigContract.readRow()` to unify the Cursor parsing logic on the UI and Hook sides
+- The SingleClickBlockHook callback now only does an int comparison — no config reads, no reflection
+- Replaced `AtomicReference` with `@Volatile var`, removing a layer of object wrapping from the read/write path
 
-### v1.4 — 适配 ColorOS 16.0.5 及以上版本 (Android 16)
+### v1.4 — Compatibility with ColorOS 16.0.5 and above (Android 16)
 
-- 适配 `setBrightnessForFallbackStrategy` 方法名变更，支持 ColorOS 16.0.5 及以上版本
-- 修复首次配置丢失：首次打开 UI 修改设置不再因 Provider 未就绪而被丢弃
-- 修复 Activity 冗余写入：进入页面时不再触发无意义的全量保存
-- 增加容错：所有 Hook 注册包裹 `runCatching`，单点失效不影响其他功能
-- 重构配置通道：统一列索引和键名到 `AodConfigContract`，消除硬编码序号和双镜像维护风险
-- 添加 ProGuard 规则防止数据类被混淆
+- Adapted to the `setBrightnessForFallbackStrategy` method rename, supporting ColorOS 16.0.5 and above
+- Fixed first-config loss: the first settings change made after opening the UI is no longer dropped because the Provider wasn't ready
+- Fixed redundant Activity writes: entering a page no longer triggers a meaningless full save
+- Improved fault tolerance: every Hook registration is wrapped in `runCatching`, so one failure doesn't break the others
+- Refactored the config channel: unified column indices and key names into `AodConfigContract`, eliminating hardcoded ordinals and the risk of maintaining two mirrors
+- Added ProGuard rules to keep data classes from being obfuscated

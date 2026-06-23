@@ -20,7 +20,7 @@ class AodConfigProvider : ContentProvider() {
             addURI(AUTHORITY, PATH_CONFIG, 1)
         }
 
-        // 列名数组（预定义，避免每次重新创建数组）
+        // Column-name array (predefined to avoid recreating the array each time)
         private val COLUMNS = arrayOf(
             AodConfigContract.KEY_INIT_DARK,
             AodConfigContract.KEY_INIT_BRIGHT,

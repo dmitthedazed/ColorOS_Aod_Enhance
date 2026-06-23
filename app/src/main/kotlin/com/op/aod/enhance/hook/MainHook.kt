@@ -11,18 +11,19 @@ import com.op.aod.enhance.hook.PanoramicHook.hookPanoramicAllDaySupport
 import com.op.aod.enhance.hook.SingleClickBlockHook.hookSingleClickWakeUpBlock
 
 /**
- * OP AOD Enhance - 主入口
+ * OP AOD Enhance - main entry point.
  *
- * 仅负责按包名分发到各功能 Hook，
- * 并为所有 Hook 提供统一的 [hostAppContext] 缓存。
+ * Only responsible for dispatching to each feature Hook by package name,
+ * and providing a unified [hostAppContext] cache for all Hooks.
  */
 object MainHook : YukiBaseHooker() {
 
     /**
-     * 当前宿主进程的 Application Context，仅初始化一次。
+     * Application Context of the current host process, initialized only once.
      *
-     * 所有 Hook 应通过 [hostAppContext] 获取 Context，而非自行反射获取，
-     * 以避免每帧重复反射调用造成的对象分配和 CPU 开销。
+     * All Hooks should obtain their Context via [hostAppContext] rather than reflecting
+     * it themselves, to avoid the object allocation and CPU cost of repeating the
+     * reflective call on every frame.
      */
     val hostAppContext: Context? by lazy {
         runCatching {

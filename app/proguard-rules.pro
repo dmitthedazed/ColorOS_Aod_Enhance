@@ -1,22 +1,22 @@
-# Xposed 入口类
+# Xposed entry class
 -keep class com.op.aod.enhance.HookEntryXposed { *; }
 
-# YukiHookAPI 核心（反射调用需要保留）
+# YukiHookAPI core (must be kept for reflective calls)
 -keep class com.highcapable.yukihookapi.** { *; }
 
-# KavaRef 反射工具（方法查找需要保留）
+# KavaRef reflection utility (must be kept for method lookup)
 -keep class com.highcapable.kavaref.** { *; }
 
-# Miuix UI 组件库（Compose 需要保留）
+# Miuix UI component library (must be kept for Compose)
 -keep class top.yukonga.miuix.** { *; }
 
-# 数据类（防止混淆导致 ContentProvider 列名不匹配）
+# Data classes (prevent obfuscation from breaking ContentProvider column names)
 -keep class com.op.aod.enhance.data.** { *; }
 
-# Hook 侧配置类（反射和序列化需要）
+# Hook-side config classes (needed for reflection and serialization)
 -keep class com.op.aod.enhance.hook.AodConfig { *; }
 -keep class com.op.aod.enhance.hook.AodConfigReader { *; }
 
-# 抑制警告
+# Suppress warnings
 -dontwarn com.highcapable.**
 -dontwarn top.yukonga.miuix.**

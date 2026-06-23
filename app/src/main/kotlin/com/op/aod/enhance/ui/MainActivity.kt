@@ -42,7 +42,7 @@ private fun MainScreen(
     Scaffold(
         topBar = {
             SmallTopAppBar(
-                title = "ColorOS AOD 增强",
+                title = "ColorOS AOD Enhance",
                 color = MiuixTheme.colorScheme.secondaryContainer,
             )
         },
@@ -61,13 +61,13 @@ private fun MainScreen(
                 )
             ) {
                 ArrowPreference(
-                    title = "AOD亮度设置",
-                    summary = "调整初始亮度与运行时倍率",
+                    title = "AOD Brightness Settings",
+                    summary = "Adjust initial brightness and runtime multiplier",
                     onClick = onOpenBrightness,
                 )
                 ArrowPreference(
-                    title = "AOD功能设置",
-                    summary = "系统界面、息屏设置与唤醒行为",
+                    title = "AOD Feature Settings",
+                    summary = "System UI, AOD settings and wake behavior",
                     onClick = onOpenFeatures,
                 )
             }

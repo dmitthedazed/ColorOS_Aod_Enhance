@@ -8,21 +8,21 @@ object AodConfigStore {
 
     private val DEFAULT_CONFIG = AodUiConfig()
 
-    /** 使用 AtomicReference 替代 @Volatile var，保证 CAS 操作原子性 */
+    /** Use AtomicReference instead of @Volatile var to keep CAS operations atomic. */
     private val cachedRef = AtomicReference<AodUiConfig?>()
 
     /**
-     * 读取配置，缓存优先。
+     * Read the config, cache first.
      *
-     * 首次调用走一次 IPC query 填充缓存；后续读直接返回缓存值。
-     * 写入侧 ([write]) 使用 CAS 更新缓存，保证线程安全。
+     * The first call performs one IPC query to populate the cache; later reads return the cached value directly.
+     * The write side ([write]) updates the cache via CAS to stay thread-safe.
      */
     fun read(resolver: ContentResolver): AodUiConfig {
         val local = cachedRef.get()
         if (local != null) return local
         val fresh = queryOrNull(resolver)
         if (fresh != null) {
-            // 尝试 CAS 设置，失败说明其他线程已设置，忽略即可
+            // Try a CAS set; failure means another thread already set it, which is fine to ignore
             cachedRef.compareAndSet(null, fresh)
             return fresh
         }
@@ -39,7 +39,7 @@ object AodConfigStore {
             put(AodConfigContract.KEY_BLOCK_SINGLE_CLICK, cfg.blockSingleClick)
         }
         resolver.update(AodConfigProvider.CONTENT_URI, values, null, null)
-        // 使用 CAS 更新缓存，避免多线程竞争丢失更新
+        // Update the cache so concurrent threads don't lose this update
         cachedRef.set(cfg)
     }
 

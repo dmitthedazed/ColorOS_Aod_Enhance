@@ -69,7 +69,7 @@ private fun FeaturesScreen(
             .debounce(300)
             .distinctUntilChanged()
             .collect { (panoramic, settingsSupport, singleClick) ->
-                // 从缓存读取完整配置再覆写——保证其他页面的设置不被默认值覆盖
+                // Read the full config from cache before overwriting, so settings from other pages aren't reset to defaults
                 val base = AodConfigStore.read(resolver)
                 currentOnSave(
                     base.copy(
@@ -84,7 +84,7 @@ private fun FeaturesScreen(
     Scaffold(
         topBar = {
             SmallTopAppBar(
-                title = "AOD功能设置",
+                title = "AOD Feature Settings",
                 color = MiuixTheme.colorScheme.secondaryContainer,
             )
         },
@@ -109,20 +109,20 @@ private fun FeaturesScreen(
                     ),
                 ) {
                     SwitchPreference(
-                        title = "系统界面-全天全景AOD支持",
-                        summary = "让系统界面解锁全天全景 AOD 相关能力",
+                        title = "System UI - All-day Panoramic AOD support",
+                        summary = "Unlock all-day panoramic AOD capabilities in System UI",
                         checked = enablePanoramic,
                         onCheckedChange = { enablePanoramic = it },
                     )
                     SwitchPreference(
-                        title = "息屏-全天全景AOD开关",
-                        summary = "在息屏设置中显示全天全景 AOD 开关",
+                        title = "AOD - All-day Panoramic AOD toggle",
+                        summary = "Show the all-day panoramic AOD toggle in AOD settings",
                         checked = enableSettingsSupport,
                         onCheckedChange = { enableSettingsSupport = it },
                     )
                     SwitchPreference(
-                        title = "AOD单击唤醒屏蔽",
-                        summary = "避免 AOD 单击误触导致唤醒",
+                        title = "Block AOD single-tap wake",
+                        summary = "Prevent accidental single taps on AOD from waking the screen",
                         checked = blockSingleClick,
                         onCheckedChange = { blockSingleClick = it },
                     )

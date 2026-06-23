@@ -20,28 +20,28 @@ internal object AodConfigReader {
 
     private val uri: Uri = Uri.parse("content://com.op.aod.enhance.config/aod_config")
 
-    /** 上次成功读取的缓存值，IPC 失败时作为兜底。 */
+    /** Last successfully read value, used as a fallback when IPC fails. */
     @Volatile
     private var cached: AodConfig? = null
 
-    /** 上次成功读取的时间戳（ns），用于 TTL 判断。 */
+    /** Timestamp (ns) of the last successful read, used for TTL checks. */
     @Volatile
     private var lastReadTimeNs = 0L
 
-    /** 缓存有效期：1 秒内复用缓存，避免高频 IPC（如触摸事件触发 4 次 Hook 调用）。 */
+    /** Cache validity: reuse the cache within 1 second to avoid frequent IPC (e.g. a touch event triggering 4 Hook calls). */
     private const val CACHE_TTL_NS = 1_000_000_000L
 
-    /** 首次读取标记，避免首次读取时因 lastReadTimeNs=0 而每次都走 IPC。 */
+    /** First-read flag, to avoid going through IPC every time because lastReadTimeNs=0 on the first read. */
     @Volatile
     private var isFirstRead = true
 
     /**
-     * 读取当前配置。
+     * Read the current config.
      *
-     * - 首次读取：直读 Provider
-     * - TTL 内：返回缓存值（零 IPC）
-     * - TTL 外：直读 Provider 获取最新值
-     * - IPC 失败：返回缓存兜底 / DEFAULT_CONFIG
+     * - First read: query the Provider directly
+     * - Within TTL: return the cached value (zero IPC)
+     * - Past TTL: query the Provider directly for the latest value
+     * - IPC failure: return the cached fallback / DEFAULT_CONFIG
      */
     fun read(context: Context?): AodConfig {
         if (context == null) return DEFAULT_CONFIG
@@ -49,7 +49,7 @@ internal object AodConfigReader {
         val cachedVal = cached
         if (!isFirstRead && cachedVal != null) {
             val now = System.nanoTime()
-            // 修复：使用已缓存的 lastReadTimeNs 判断，避免首次读取时 lastReadTimeNs=0 的问题
+            // Fix: rely on the cached lastReadTimeNs, avoiding the first-read lastReadTimeNs=0 problem
             if (now - lastReadTimeNs < CACHE_TTL_NS) {
                 return cachedVal
             }
@@ -59,7 +59,7 @@ internal object AodConfigReader {
     }
 
     /**
-     * 直读 Provider。成功时更新缓存和时间戳，失败时返回 null。
+     * Query the Provider directly. Updates the cache and timestamp on success, returns null on failure.
      */
     private fun readFromProvider(context: Context): AodConfig? {
         return runCatching {

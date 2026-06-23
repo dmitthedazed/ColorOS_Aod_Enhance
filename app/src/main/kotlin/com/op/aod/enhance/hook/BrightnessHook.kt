@@ -23,18 +23,18 @@ internal object BrightnessHook {
                     val target = if (originalResult < INIT_DARK_THRESHOLD) cfg.initDark else cfg.initBright
                     result = target
                     if (BuildConfig.DEBUG) {
-                        Log.d("AOD_Enhance", "AOD_INIT_FIX: 原始=$originalResult -> 修正为=$target")
+                        Log.d("AOD_Enhance", "AOD_INIT_FIX: original=$originalResult -> corrected=$target")
                     }
                 }
             }
     }
 
     fun YukiBaseHooker.hookRunningBrightnessBoost() {
-        // 使用统一的 runCatching 包裹，内部按功能分组处理
+        // Wrap everything in a single runCatching, handling each group internally
         runCatching {
-            // BaseDisplay 方法（独立处理）
+            // BaseDisplay method (handled separately)
             hookBaseDisplayBrightnessBoost()
-            // Doze 亮度方法统一 hook，用一个循环处理多个方法名
+            // Hook the Doze brightness methods together, looping over the method names
             val dozeMethodNames = listOf(
                 "setDozeScreenBrightness",
                 "setBrightnessForFallbackStrategy",
